@@ -16,4 +16,4 @@ for grp in "${grps[@]}"; do \
 done
 
 # Backup results
-gsutil -m cp -rn array_autosomes_postqc_pruned_onlysrwgs_pca_results_plink* $WORKSPACE_BUCKET/data/pc_data/
+gsutil -m cp -rn pcs/*eigenval $bucket/data/pc_data/
