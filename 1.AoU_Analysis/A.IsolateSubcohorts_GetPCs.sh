@@ -12,7 +12,7 @@ gsutil -u $GOOGLE_PROJECT -m cp -r gs://fc-secure-4029af59-df13-4d1b-b22c-2ae64c
 grps=(hisp_identifying non_hisp_identifying) ;\
 for grp in "${grps[@]}"; do \
   ../plink2 --pfile array_data/arrays_autosomes_post_qc_pruned_common --pca 20 approx \
-    --keep ids/${grp}_ids.txt --out pcs/${grps}_pcs ;\
+    --keep ids/${grp}_ids.txt --out pcs/${grp}_pcs ;\
 done
 
 # Backup results
