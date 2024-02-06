@@ -82,3 +82,6 @@ dev.off()
 
 ###
 # So go for 3 SDs
+out_df = flagged_samples %>% filter(is.na(Three_SD_Flags)) %>% select(IID) %>%
+    mutate(FID = 0,.before = "IID")
+vroom_write(out_df,"piezo2_work/rg_input/hisp_ids_3sd.txt")
