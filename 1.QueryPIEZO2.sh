@@ -5,3 +5,6 @@
   /n/home09/jwillett/true_lab_storage/Data_Links/NIAGADS_Personal/NIAGADS_PIEZO2_PLINK --memory 80000
 
 # Get LD information. Variants in format of: 18:10723405:G:A
+./plink2 --pfile /n/home09/jwillett/true_lab_storage/Data_Links/NIAGADS_Personal/NIAGADS_PIEZO2_PLINK \
+  --r2-phased --ld-snp-list /n/home09/jwillett/true_lab_storage/02_PIEZO2_HISP/for_niagads_ld.txt \
+  --out /n/home09/jwillett/true_lab_storage/02_PIEZO2_HISP/piezo2_ld --ld-window-r2 0
