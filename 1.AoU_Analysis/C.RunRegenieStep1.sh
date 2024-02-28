@@ -9,11 +9,12 @@ groups=(hisp non_hisp)
     --phenoFile ../regenie_pheno.txt \
     --covarFile ../regenie_covar_20pcs.txt \
     --bt \
-    --out rg_step1/rg_step1_${groups[1]} \
+    --out rg_step1/rg_step1_${groups[0]} \
     --bsize 1000 \
     --lowmem \
-    --lowmem-prefix tmp_rg_20_${groups[1]} \
-    --phenoCol AD_any \
-    --keep rg_input/${groups[1]}_ids_3sd.txt
+    --lowmem-prefix tmp_rg_20_${groups[0]} \
+    --phenoCol AD,AD_any \
+    --keep rg_input/${groups[0]}_ids_3sd.txt
 # 1695 cases and 54767 controls for HISP with 3 SDs
 # 'AD_any': 9595 cases and 178680 controls for NON HISP with 3 SDs
+# Only 38 ICD AD cases for HISP, so not done.
