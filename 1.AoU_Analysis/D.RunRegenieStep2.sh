@@ -1,3 +1,5 @@
+# Use 16 cores, 104 GB RAM. Giving more is oddly slower, perhaps there is increased demand for those settings causing problems
+
 groups=(hisp non_hisp)
 for ((chr=1;chr<=22;chr++)); do \
                 ../regenie_v3.2.8.gz_x86_64_Linux \
