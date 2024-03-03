@@ -7,7 +7,7 @@ groups=(hisp non_hisp)
     --step 1 \
     --pgen array_data/arrays_autosomes_post_qc_pruned_common \
     --phenoFile ../regenie_pheno.txt \
-    --covarFile ../regenie_covar_20pcs.txt \
+    --covarFile regenie_covar_hisp.txt \
     --bt \
     --out rg_step1/rg_step1_${groups[0]} \
     --bsize 1000 \
