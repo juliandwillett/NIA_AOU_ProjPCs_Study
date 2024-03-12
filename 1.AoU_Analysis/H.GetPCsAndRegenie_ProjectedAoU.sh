@@ -44,3 +44,18 @@ for ((chr=1;chr<=22;chr++)); do \
     --minMAC 20 --phenoCol AD_any ;\
 done
 gsutil -m cp -rn rg_step2_aou_nia_proj/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_proj/
+
+### Run regenie on chr 18 using 1,2,3,4, or 5 SD cutoff to see if that makes a difference in results
+# First get PCs
+for ((sd=1;sd<=5;sd++)); do \
+  ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
+  --keep piezo2_projection/aou_within_${sd}sd_projected_niagads_ids.txt \
+  --out array_data/aou_niaproj${sd}sd_maf_geno_forprune --indep-pairwise 100kb 1 0.1 \
+  --memory 50000 ;\
+  ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
+  --keep piezo2_projection/aou_within_${sd}sd_projected_niagads_ids.txt \
+  --exclude array_data/aou_niaproj${sd}sd_maf_geno_forprune.prune.out \
+  --make-pgen --out array_data/aou_niaproj${sd}sd_maf_geno_pruned ;\
+  ./plink2 --pfile array_data/aou_niaproj${sd}sd_maf_geno_pruned --pca 20 approx \
+  --out array_data/aou_niaproj${sd}sd_maf_geno_pruned_pcs ;\
+done
