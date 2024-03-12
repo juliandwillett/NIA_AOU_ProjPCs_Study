@@ -59,3 +59,20 @@ for ((sd=1;sd<=5;sd++)); do \
   ./plink2 --pfile array_data/aou_niaproj${sd}sd_maf_geno_pruned --pca 20 approx \
   --out array_data/aou_niaproj${sd}sd_maf_geno_pruned_pcs ;\
 done
+
+# Then run step 1
+for ((sd=1;sd<=5;sd++)); do \
+  #awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_niaproj${sd}sd_maf_geno_pruned.psam > tmp ;\
+  #mv tmp array_data/aou_niaproj${sd}sd_maf_geno_pruned.psam ;\
+  ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+    --step 1 \
+    --pgen array_data/aou_niaproj${sd}sd_maf_geno_pruned \
+    --phenoFile regenie_input/regenie_pheno.txt \
+    --covarFile regenie_input/regenie_covar_projected_niagads_hisp_${sd}sd.txt \
+    --bt \
+    --out rg_step1_aou_nia_proj_xsd/aou_step1_nia_hisp_proj_${sd}sd \
+    --bsize 1000 \
+    --lowmem \
+    --lowmem-prefix tmp_rg_40 \
+    --phenoCol AD_any ;\
+done
