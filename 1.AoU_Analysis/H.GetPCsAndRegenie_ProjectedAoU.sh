@@ -76,3 +76,15 @@ for ((sd=1;sd<=5;sd++)); do \
     --lowmem-prefix tmp_rg_40 \
     --phenoCol AD_any ;\
 done
+
+# Then run step 2 on chromosome 18
+for ((sd=1;sd<=5;sd++)); do \
+  ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+    --step 2 --pgen pgen_qc/chr18_geno_mac \
+    --phenoFile regenie_input/regenie_pheno.txt \
+    --covarFile regenie_input/regenie_covar_projected_niagads_hisp_${sd}sd.txt \
+    --bt --firth-se --firth --approx --pThresh 0.01 \
+    --pred rg_step1_aou_nia_proj_xsd/aou_step1_nia_hisp_proj_${sd}sd_pred.list \
+    --bsize 400 --out rg_step2_aou_nia_proj_xsd/chr18_${sd}sd \
+    --minMAC 20 --phenoCol AD_any ;\
+done
