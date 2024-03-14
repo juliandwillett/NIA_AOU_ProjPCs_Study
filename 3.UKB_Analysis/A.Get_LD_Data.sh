@@ -1,5 +1,5 @@
 wc -l no_missing_covar2 # right covar file for inclusion
-awk '{print $1 "\t" $2}' no_missing_covar2 > fid_iid_participants.txt
+awk '{gsub(/\.[0]+$/, "", $1); gsub(/\.[0]+$/, "", $2); print $1 "\t" $2}' no_missing_covar2 > fid_iid_participants.txt
 
 ./plink2 --pfile merged_chromosome_18 --keep fid_iid_participants.txt \
   --geno 0.1 \
