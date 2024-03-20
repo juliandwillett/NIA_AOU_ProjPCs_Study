@@ -15,6 +15,7 @@ vroom_write(merged,"regenie_input/regenie_covar_projected_niagads_hisp_3sd_anc_c
 {/R}
 
 {bash}
+# step 1
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 1 \
     --pgen array_data/aou_niaproj3sd_maf_geno_pruned \
@@ -26,6 +27,25 @@ vroom_write(merged,"regenie_input/regenie_covar_projected_niagads_hisp_3sd_anc_c
     --lowmem \
     --lowmem-prefix tmp_rg_40 \
     --phenoCol AD_any
-gsutil -m cp -rn rg_step1_aou_nia_proj/* $WORKSPACE_BUCKET/data/rg_step1_aou_nia_proj/
+gsutil -m cp -rn rg_step1_aou_nia_proj_anc_covar/* $WORKSPACE_BUCKET/data/rg_step1_aou_nia_proj_anc_covar/
+
+# step 2: 19 is done
+./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+    --step 2 --pgen pgen_qc/chr1_geno_mac \
+    --phenoFile regenie_input/regenie_pheno.txt \
+    --covarFile regenie_input/regenie_covar_projected_niagads_hisp_3sd_anc_covar.txt \
+    --bt --firth-se --firth --approx --pThresh 0.01 --catCovarList ancestry_pred \
+    --pred rg_step1_aou_nia_proj_anc_covar/aou_step1_nia_hisp_proj_anc_covar_pred.list \
+    --bsize 400 --out rg_step2_aou_nia_proj_anc_covar/chr1 \
+    --minMAC 20 --phenoCol AD_any
+gsutil -m cp -rn rg_step2_aou_nia_proj_anc_covar/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_proj_anc_covar/
+
+# get HWE
+./plink2 --pfile pgen_qc/chr19_geno_mac \
+    --keep piezo2_projection/aou_within_3sd_projected_niagads_ids.txt \
+    --hardy 'midp' --out variant_qc/aou_nia_proj_chr19_anc_covar
 
 {/bash}
+
+{R}
+# make manhattan to look at these new results
