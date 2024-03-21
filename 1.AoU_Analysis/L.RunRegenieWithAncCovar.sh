@@ -92,6 +92,7 @@ mv tmp array_data/aou_hisp_maf_geno_hwe_pruned.psam
 gsutil -m cp -rn rg_step1_aou_hisp_anc_covar/* $WORKSPACE_BUCKET/data/rg_step1_aou_hisp_anc_covar/
 
 # Step 2
+# no hwe on array data
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 2 --pgen pgen_qc/chr4_geno_mac \
     --phenoFile regenie_input/regenie_pheno.txt \
@@ -99,5 +100,14 @@ gsutil -m cp -rn rg_step1_aou_hisp_anc_covar/* $WORKSPACE_BUCKET/data/rg_step1_a
     --bt --firth-se --firth --approx --pThresh 0.01 --catCovarList ancestry_pred \
     --pred rg_step1_aou_hisp_anc_covar_nohwe/aou_step1_hisp_anc_covar_nohwe_pred.list \
     --bsize 400 --out rg_step2_aou_hisp_anc_covar/chr4_nohwe \
+    --minMAC 20 --phenoCol AD_any
+# hwe on array data
+./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+    --step 2 --pgen pgen_qc/chr4_geno_mac \
+    --phenoFile regenie_input/regenie_pheno.txt \
+    --covarFile regenie_input/regenie_covar_hisp_anc_covar_hwe.txt \
+    --bt --firth-se --firth --approx --pThresh 0.01 --catCovarList ancestry_pred \
+    --pred rg_step1_aou_hisp_anc_covar_hwe/aou_step1_hisp_anc_covar_hwe_pred.list \
+    --bsize 400 --out rg_step2_aou_hisp_anc_covar/chr4_hwe \
     --minMAC 20 --phenoCol AD_any
 gsutil -m cp -rn rg_step2_aou_nia_proj_anc_covar/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_proj_anc_covar/
