@@ -66,7 +66,7 @@ mv tmp array_data/aou_hisp_maf_geno_pruned.psam
 awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_hisp_maf_geno_hwe_pruned.psam > tmp ;\
 mv tmp array_data/aou_hisp_maf_geno_hwe_pruned.psam
 
-# Step 1 for HWE filtered data and not
+# Step 1 for array data not processed with HWE (does not meaningfully affect results)
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 1 \
     --pgen array_data/aou_hisp_maf_geno_pruned \
@@ -78,22 +78,11 @@ mv tmp array_data/aou_hisp_maf_geno_hwe_pruned.psam
     --lowmem \
     --lowmem-prefix tmp_rg_40 \
     --phenoCol AD_any
-./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
-    --step 1 \
-    --pgen array_data/aou_hisp_maf_geno_hwe_pruned \
-    --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/regenie_covar_hisp_anc_covar_hwe.txt \
-    --bt --catCovarList ancestry_pred \
-    --out rg_step1_aou_hisp_anc_covar_hwe/aou_step1_hisp_anc_covar_hwe \
-    --bsize 1000 \
-    --lowmem \
-    --lowmem-prefix tmp_rg_40 \
-    --phenoCol AD_any
 gsutil -m cp -rn rg_step1_aou_hisp_anc_covar/* $WORKSPACE_BUCKET/data/rg_step1_aou_hisp_anc_covar/
 
 # Step 2. Run on chr 4
-# no hwe on array data. 
-chr=14
+# no hwe on array data. Done on 4, 8, 13-22. In progress: 1-12
+chr=18
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 2 --pgen pgen_qc/chr${chr}_geno_mac \
     --phenoFile regenie_input/regenie_pheno.txt \
@@ -101,15 +90,6 @@ chr=14
     --bt --firth-se --firth --approx --pThresh 0.01 --catCovarList ancestry_pred \
     --pred rg_step1_aou_hisp_anc_covar_nohwe/aou_step1_hisp_anc_covar_nohwe_pred.list \
     --bsize 400 --out rg_step2_aou_hisp_anc_covar/chr${chr}_nohwe \
-    --minMAC 20 --phenoCol AD_any
-# hwe on array data
-./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
-    --step 2 --pgen pgen_qc/chr${chr}_geno_mac \
-    --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/regenie_covar_hisp_anc_covar_hwe.txt \
-    --bt --firth-se --firth --approx --pThresh 0.01 --catCovarList ancestry_pred \
-    --pred rg_step1_aou_hisp_anc_covar_hwe/aou_step1_hisp_anc_covar_hwe_pred.list \
-    --bsize 400 --out rg_step2_aou_hisp_anc_covar/chr${chr}_hwe \
     --minMAC 20 --phenoCol AD_any
 gsutil -m cp -rn rg_step2_aou_hisp_anc_covar/* $WORKSPACE_BUCKET/data/rg_step2_aou_hisp_anc_covar/
 
