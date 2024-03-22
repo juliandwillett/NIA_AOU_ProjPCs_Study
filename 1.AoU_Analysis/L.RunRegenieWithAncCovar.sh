@@ -81,7 +81,7 @@ mv tmp array_data/aou_hisp_maf_geno_hwe_pruned.psam
 gsutil -m cp -rn rg_step1_aou_hisp_anc_covar/* $WORKSPACE_BUCKET/data/rg_step1_aou_hisp_anc_covar/
 
 # Step 2. Run on chr 4
-# no hwe on array data. Done on 4, 8, 13-22. In progress: 1-12
+# no hwe on array data. Done on 1-6, 8, 13-22. In progress: 1-12
 chr=18
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 2 --pgen pgen_qc/chr${chr}_geno_mac \
