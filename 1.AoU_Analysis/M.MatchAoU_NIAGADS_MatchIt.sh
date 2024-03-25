@@ -79,17 +79,16 @@ mv tmp array_data/aou_nia_matchit_maf_geno_pruned.psam ;\
 gsutil -m cp -rn rg_step1_aou_nia_matchit/* $WORKSPACE_BUCKET/data/rg_step1_aou_nia_matchit/
 
 ### Then launch step 2
-#for ((chr=1;chr<=22;chr++)); do \
-  chr=18
+for ((chr=1;chr<=22;chr++)); do \
   ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
-    --step 2 --pgen pgen_qc/chr18_geno_mac_maf \
+    --step 2 --pgen pgen_qc/chr${chr}_geno_mac \
     --phenoFile regenie_input/regenie_pheno.txt \
     --covarFile regenie_input/aou_nia_matchit_noanccovar.txt \
     --bt --firth-se --firth --approx --pThresh 0.01 \
     --pred rg_step1_aou_nia_matchit/rg_step1_aou_nia_matchit_pred.list \
     --bsize 400 --out rg_step2_aou_nia_matchit/chr${chr} \
     --minMAC 20 --phenoCol AD_any ;\
-#done
+done ;\
 gsutil -m cp -rn rg_step2_aou_nia_proj/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_proj/
 
 ### Regenie when using ANC as a covar
