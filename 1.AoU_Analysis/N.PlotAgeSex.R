@@ -1,6 +1,7 @@
-# Get data
+# Get data. Note that Female Sex in NIAGADS was 1, and 0 in AoU. So swap as necessary.
 pheno_df = vroom('regenie_input/regenie_pheno.txt',show_col_types = F)
-nia_hisp_cohort = vroom("NIAGADS_demographic_data_all.txt",show_col_types = F)
+nia_hisp_cohort = vroom("NIAGADS_demographic_data_all.txt",show_col_types = F) %>%
+  mutate(Sex = ifelse(Sex == 1,0,1))
 aou_hisp_cohort = merge(vroom("regenie_input/regenie_covar_hisp_anc_covar.txt",show_col_types = F),
                        pheno_df,by='IID')
 aou_amr_cohort = merge(vroom("regenie_input/regenie_covar_commonpcs.txt",show_col_types = F) %>%
@@ -27,7 +28,7 @@ plt = ggplot(all_cohort_df %>% mutate(AD = as.factor(AD),AD = ifelse(AD == "1","
 print(plt)
 ggsave(plt,'age_plot.png',width = 5,height=3)
 
-# SEX PLOT
+# SEX PLOT. 
 cud_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 proportions <- all_cohort_df %>% group_by(Cohort, AD) %>%
   summarise(Proportion = mean(Sex == 0))
