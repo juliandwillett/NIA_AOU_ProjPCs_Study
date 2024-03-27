@@ -13,7 +13,8 @@ aou_df = merge(aou_df,pcs[[2]],by='IID') %>% select(-FID,-AD) %>% rename(AD=AD_a
     mutate(IID = as.character(IID))
 nia_df = vroom("NIAGADS_demographic_data_all.txt",show_col_types = F) %>% filter(Ethnicity == "Hisp") %>%
     select(IID,Affection.Status,Age,Sex)
-nia_df = merge(nia_df,pcs[[1]],by='IID') %>% rename(AD = Affection.Status)
+nia_df = merge(nia_df,pcs[[1]],by='IID') %>% rename(AD = Affection.Status) %>%
+    mutate(Sex = ifelse(Sex == 1,0,1)) # sex coded in  opposite way in AoU
 matching_df = aou_df %>% mutate(Cohort = 'AoU_All') %>%
     add_row(nia_df %>% mutate(Cohort = 'NIA_HISP')) %>%
     mutate(Cohort = ifelse(Cohort == "NIA_HISP",1,0),Cohort = as.factor(Cohort))
@@ -40,7 +41,7 @@ vroom_write(samples_weights_greater_1 %>% filter(Cohort == 0) %>% mutate(FID = 0
 #####################
 ##### Now process with Plink and Regenie:
 ### Get PCs
-awk 'NR > 1 {print $1 "\t" $2}' aou_samples_matched_niagads_nearest.txt > ids/ids_matchit.txt
+awk 'NR > 1 {print $1 "\t" $2}' aou_samples_matched_niagads_subclassification.txt > ids/ids_matchit.txt
 ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
   --keep ids/ids_matchit.txt --out array_data/aou_nia_matchit_maf_geno \
   --indep-pairwise 100kb 1 0.1 --memory 100000
@@ -53,16 +54,20 @@ awk 'NR > 1 {print $1 "\t" $2}' aou_samples_matched_niagads_nearest.txt > ids/id
 
 ### Use R to produce covar file with these updated PCs
 {R}
-df = vroom("aou_samples_matched_niagads_subclassification.txt",show_col_types = F)
-new_pcs = vroom("array_data/aou_nia_matchit_maf_geno_pruned_pcs.eigenvec")
-for (pc in c(glue("PC{1:20}"))) {
-    df[[pc]] = new_pcs[[pc]]
-}
-vroom_write(df,'regenie_input/aou_nia_matchit.txt')
+df = vroom("aou_samples_matched_niagads_subclassification.txt",show_col_types = F) %>% select(FID,IID,Age,Sex)
+new_pcs = vroom("array_data/aou_nia_matchit_maf_geno_pruned_pcs.eigenvec",show_col_types = F) %>% 
+    rename(IID=`#IID`)
+ancestry = vroom("ancestry_preds.tsv",show_col_types = F) %>% select(research_id,ancestry_pred) %>% 
+    rename(IID=research_id) %>% filter(IID %in% df$IID)
+
+df_pcs = merge(df,new_pcs,by='IID')
+
+vroom_write(df_pcs,'regenie_input/aou_nia_matchit_noanccovar.txt')
 {/R}
 
 ### Then launch Step 1: 
 ## For anc covar: regenie_input/aou_nia_matchit_with_anccovar.txt
+# High Rsq 0.68
 awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_nia_matchit_maf_geno_pruned.psam > tmp ;\
 mv tmp array_data/aou_nia_matchit_maf_geno_pruned.psam ;\
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
