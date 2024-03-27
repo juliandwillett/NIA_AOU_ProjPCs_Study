@@ -1,46 +1,38 @@
 ### Check stats for GW-sig hits
-for ((chr=1;chr<=22;chr++)); do 
-  # AoU HISP
-  ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract variant_qc/gw_hits_aou_hisp.txt \
-    --keep ids/hispanic_individuals.txt --hardy 'midp' --missing --out variant_qc/aou_hisp_chr${chr}
+ancestries=(afr amr eas eur mid sas) ;\
+for anc in "${ancestries[@]}"; do \
+  for ((chr=1;chr<=22;chr++)); do \
+    # AoU HISP
+    ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract aou_hisp_for_hardy.txt \
+      --keep ids/hispanic_individuals.txt ${anc}_ids.txt --hardy 'midp' --out variant_qc/aou_hisp_chr${chr}_anc_${anc}
+  
+    # AoU AMR
+    ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract aou_amr_for_hardy.txt \
+      --keep ids/amr_ids.txt --hardy 'midp' --out variant_qc/aou_amr_chr${chr}_anc_amr
+  
+    # AoU NIA PROJ 3SD
+    ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract aou_nia_proj_3sd_for_hardy.txt \
+      --keep piezo2_projection/aou_within_3sd_projected_niagads_ids.txt ${anc}_ids.txt \
+      --hardy 'midp' --out variant_qc/aou_nia_proj_3sd_chr${chr}_anc_${anc}
 
-  # AoU AMR
-  ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract variant_qc/gw_hits_aou_amr.txt \
-    --keep ids/amr_ids.txt --hardy 'midp' --missing --out variant_qc/aou_amr_chr${chr}
-
-  # AoU NIA PROJ 3SD
-  ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract variant_qc/gw_hits_aou_nia_proj.txt \
-    --keep piezo2_projection/aou_within_3sd_projected_niagads_ids.txt \
-    --hardy 'midp' --missing --out variant_qc/aou_nia_proj_chr${chr}
+    # AoU NIA PROJ MatchIt
+    ./plink2 --pfile pgen_qc/chr${chr}_geno_mac --extract aou_nia_matchit_for_hardy.txt \
+      --keep ids/ids_matchit.txt ${anc}_ids.txt \
+      --hardy 'midp' --out variant_qc/aou_nia_matchit_chr${chr}_anc_${anc}
+  done
 done
 
-### Merge the output
-# VMISS
-head -1 variant_qc/aou_hisp_chr1.vmiss > variant_qc/aou_hisp_all_vmiss.txt ;\
-head -1 variant_qc/aou_amr_chr1.vmiss > variant_qc/aou_amr_all_vmiss.txt ;\
-head -1 variant_qc/aou_nia_proj_chr1.vmiss > variant_qc/aou_nia_proj_all_vmiss.txt ;\
-for ((chr=1;chr<=22;chr++)); do \
-  tail -n +2 variant_qc/aou_hisp_chr${chr}.vmiss >> variant_qc/aou_hisp_all_vmiss.txt ;\
-  tail -n +2 variant_qc/aou_amr_chr${chr}.vmiss >> variant_qc/aou_amr_all_vmiss.txt ;\
-  tail -n +2 variant_qc/aou_nia_proj_chr${chr}.vmiss >> variant_qc/aou_nia_proj_all_vmiss.txt ;\
-done
-
-# SMISS
-head -1 variant_qc/aou_hisp_chr1.smiss > variant_qc/aou_hisp_all_smiss.txt ;\
-head -1 variant_qc/aou_amr_chr1.smiss > variant_qc/aou_amr_all_smiss.txt ;\
-head -1 variant_qc/aou_nia_proj_chr1.smiss > variant_qc/aou_nia_proj_all_smiss.txt ;\
-for ((chr=1;chr<=22;chr++)); do \
-  tail -n +2 variant_qc/aou_hisp_chr${chr}.smiss >> variant_qc/aou_hisp_all_smiss.txt ;\
-  tail -n +2 variant_qc/aou_amr_chr${chr}.smiss >> variant_qc/aou_amr_all_smiss.txt ;\
-  tail -n +2 variant_qc/aou_nia_proj_chr${chr}.smiss >> variant_qc/aou_nia_proj_all_smiss.txt ;\
-done
-
+### Merge the output 
 # HWE
-head -1 variant_qc/aou_hisp_chr1.hardy > variant_qc/aou_hisp_all_hardy.txt ;\
-head -1 variant_qc/aou_amr_chr1.hardy > variant_qc/aou_amr_all_hardy.txt ;\
-head -1 variant_qc/aou_nia_proj_chr1.hardy > variant_qc/aou_nia_proj_all_hardy.txt ;\
-for ((chr=1;chr<=22;chr++)); do \
-  tail -n +2 variant_qc/aou_hisp_chr${chr}.hardy >> variant_qc/aou_hisp_all_hardy.txt ;\
-  tail -n +2 variant_qc/aou_amr_chr${chr}.hardy >> variant_qc/aou_amr_all_hardy.txt ;\
-  tail -n +2 variant_qc/aou_nia_proj_chr${chr}.hardy >> variant_qc/aou_nia_proj_all_hardy.txt ;\
+for anc in "${ancestries[@]}"; do \
+  head -1 variant_qc/aou_hisp_chr1_anc_${anc}.hardy > variant_qc/aou_hisp_all_hardy_anc_${anc}.txt ;\
+  head -1 variant_qc/aou_amr_chr1_anc_amr.hardy > variant_qc/aou_amr_all_hardy_anc_amr.txt ;\
+  head -1 variant_qc/aou_nia_proj_3sd_chr1_anc_${anc}.hardy > variant_qc/aou_nia_proj_3sd_all_hardy_anc_${anc}.txt ;\
+  head -1 variant_qc/aou_nia_matchit_chr1_anc_${anc}.hardy > variant_qc/aou_nia_matchit_all_hardy_anc_${anc}.txt ;\
+  for ((chr=1;chr<=22;chr++)); do \
+    tail -n +2 variant_qc/aou_hisp_chr${chr}_anc_${anc}.hardy >> variant_qc/aou_hisp_all_hardy_anc_${anc}.txt ;\
+    tail -n +2 variant_qc/aou_amr_chr${chr}_anc_amr.hardy >> variant_qc/aou_amr_all_hardy_anc_amr.txt ;\
+    tail -n +2 variant_qc/aou_nia_proj_3sd_chr${chr}_anc_${anc}.hardy >> variant_qc/aou_nia_proj_3sd_all_hardy_anc_${anc}.txt ;\
+    tail -n +2 variant_qc/aou_nia_matchit_chr${chr}_anc_${anc}.hardy >> variant_qc/aou_nia_matchit_all_hardy_anc_${anc}.txt ;\
+  done \
 done
