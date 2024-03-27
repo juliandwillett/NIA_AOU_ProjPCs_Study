@@ -37,3 +37,25 @@ for anc in "${ancestries[@]}"; do \
     tail -n +2 variant_qc/aou_nia_matchit_chr${chr}_anc_${anc}.hardy >> variant_qc/aou_nia_matchit_all_hardy_anc_${anc}.txt ;\
   done \
 done
+
+#### Then merge into a dataframe for all ancestries in R
+{R}
+library(vroom)
+library(tidyverse)
+library(magrittr)
+library(glue)
+
+datasets = c('hisp','amr','nia_proj_3sd','nia_matchit')
+ancestries = c('afr','amr','eas','eur','mid','sas')
+for (dataset in datasets) {
+    df = data.frame(ID = read.table(glue("aou_{dataset}_for_hardy.txt"))$V1)
+    for (anc in ancestries) {
+        if (dataset == 'amr' & anc != 'amr') next
+        hwe = vroom(glue("variant_qc/aou_{dataset}_all_hardy_anc_{anc}.txt"),show_col_types = F) %>% 
+            select(ID,MIDP)
+        df = merge(df,hwe,by='ID') 
+        names(df)[[length(df)]] = glue("MIDP_{anc}")
+    }
+    vroom_write(df,glue("variant_qc/aou_{dataset}_all_hardy_anc_all.txt"))
+}
+{/R}
