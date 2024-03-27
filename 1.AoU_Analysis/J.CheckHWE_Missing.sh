@@ -25,6 +25,7 @@ done
 ### Merge the output 
 # HWE
 for anc in "${ancestries[@]}"; do \
+  echo $anc ;\
   head -1 variant_qc/aou_hisp_chr1_anc_${anc}.hardy > variant_qc/aou_hisp_all_hardy_anc_${anc}.txt ;\
   head -1 variant_qc/aou_amr_chr1_anc_amr.hardy > variant_qc/aou_amr_all_hardy_anc_amr.txt ;\
   head -1 variant_qc/aou_nia_proj_3sd_chr1_anc_${anc}.hardy > variant_qc/aou_nia_proj_3sd_all_hardy_anc_${anc}.txt ;\
