@@ -1,4 +1,5 @@
-# Match using projected PCs, then use MatchIt to identify AoU participants most similar to NIAGADS cohort
+# Match using projected PCs, then use MatchIt to identify AoU participants most similar to NIAGADS cohort using either
+#     solely PCs or PCs + Age + Sex
 {R}
 library(vroom)
 library(tidyverse)
@@ -41,16 +42,16 @@ vroom_write(samples_weights_greater_1 %>% filter(Cohort == 0) %>% mutate(FID = 0
 #####################
 ##### Now process with Plink and Regenie:
 ### Get PCs
-awk 'NR > 1 {print $1 "\t" $2}' aou_samples_matched_niagads_subclassification.txt > ids/ids_matchit.txt
+comp=(gensim genphensim)
 ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
-  --keep ids/ids_matchit.txt --out array_data/aou_nia_matchit_maf_geno \
+  --keep aou_samples_genetically_matched_niagads_subclassification.txt --out array_data/aou_nia_matchit_${comp[0]}_maf_geno \
   --indep-pairwise 100kb 1 0.1 --memory 100000
 ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
-  --keep ids/ids_matchit.txt \
-  --exclude array_data/aou_nia_matchit_maf_geno.prune.out \
-  --make-pgen --out array_data/aou_nia_matchit_maf_geno_pruned
-./plink2 --pfile array_data/aou_nia_matchit_maf_geno_pruned --pca 20 approx \
-  --out array_data/aou_nia_matchit_maf_geno_pruned_pcs
+  --keep aou_samples_genetically_matched_niagads_subclassification.txt \
+  --exclude array_data/aou_nia_matchit_${comp[0]}_maf_geno.prune.out \
+  --make-pgen --out array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned
+./plink2 --pfile array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned --pca 20 approx \
+  --out array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned_pcs
 
 ### Use R to produce covar file with these updated PCs
 {R}
@@ -67,16 +68,17 @@ vroom_write(df_pcs,'regenie_input/aou_nia_matchit_noanccovar.txt')
 
 ### Then launch Step 1: 
 ## For anc covar: regenie_input/aou_nia_matchit_with_anccovar.txt
-# High Rsq 0.68
-awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_nia_matchit_maf_geno_pruned.psam > tmp ;\
-mv tmp array_data/aou_nia_matchit_maf_geno_pruned.psam ;\
+# High Rsq 0.68 for GENPHEN, 0.80 for GEN
+comp=(gensim genphensim)
+awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned.psam > tmp ;\
+mv tmp array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned.psam ;\
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 1 \
-    --pgen array_data/aou_nia_matchit_maf_geno_pruned \
+    --pgen array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned \
     --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/aou_nia_matchit_noanccovar.txt \
+    --covarFile regenie_input/aou_nia_matchit_gensim.txt \
     --bt \
-    --out rg_step1_aou_nia_matchit/rg_step1_aou_nia_matchit \
+    --out rg_step1_aou_nia_matchit_gensim/rg_step1_aou_nia_matchit_gensim \
     --bsize 1000 \
     --lowmem \
     --lowmem-prefix tmp_rg_20_matchit \
@@ -88,10 +90,10 @@ for ((chr=1;chr<=22;chr++)); do \
   ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 2 --pgen pgen_qc/chr${chr}_geno_mac \
     --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/aou_nia_matchit_noanccovar.txt \
+    --covarFile regenie_input/aou_nia_matchit_gensim.txt \
     --bt --firth-se --firth --approx --pThresh 0.01 \
-    --pred rg_step1_aou_nia_matchit/rg_step1_aou_nia_matchit_pred.list \
-    --bsize 400 --out rg_step2_aou_nia_matchit/chr${chr} \
+    --pred rg_step1_aou_nia_matchit_gensim/rg_step1_aou_nia_matchit_gensim_pred.list \
+    --bsize 400 --out rg_step2_aou_nia_matchit_gensim/chr${chr} \
     --minMAC 20 --phenoCol AD_any ;\
 done ;\
 gsutil -m cp -r rg_step2_aou_nia_matchit/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_matchit/
