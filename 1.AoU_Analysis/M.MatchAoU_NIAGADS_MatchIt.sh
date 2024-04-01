@@ -70,6 +70,7 @@ vroom_write(df_pcs,'regenie_input/aou_nia_matchit_noanccovar.txt')
 ## For anc covar: regenie_input/aou_nia_matchit_with_anccovar.txt
 # High Rsq 0.68 for GENPHEN, 0.80 for GEN
 comp=(gensim genphensim)
+#matchit alone is genphensim
 awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned.psam > tmp ;\
 mv tmp array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned.psam ;\
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
@@ -83,7 +84,7 @@ mv tmp array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned.psam ;\
     --lowmem \
     --lowmem-prefix tmp_rg_20_matchit \
     --phenoCol AD_any 
-gsutil -m cp -rn rg_step1_aou_nia_matchit/* $WORKSPACE_BUCKET/data/rg_step1_aou_nia_matchit/
+gsutil -m cp -rn rg_step1_aou_nia_matchit_gensim/* $WORKSPACE_BUCKET/data/rg_step1_aou_nia_matchit_gensim/
 
 ### Then launch step 2
 for ((chr=1;chr<=22;chr++)); do \
