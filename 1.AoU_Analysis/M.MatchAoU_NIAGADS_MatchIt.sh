@@ -97,7 +97,7 @@ for ((chr=1;chr<=22;chr++)); do \
     --bsize 400 --out rg_step2_aou_nia_matchit_gensim/chr${chr} \
     --minMAC 20 --phenoCol AD_any ;\
 done ;\
-gsutil -m cp -r rg_step2_aou_nia_matchit/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_matchit/
+gsutil -m cp -r rg_step2_aou_nia_matchit_gensim/* $WORKSPACE_BUCKET/data/rg_step2_aou_nia_matchit_gensim/
 
 ### Regenie when using ANC as a covar
 ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
