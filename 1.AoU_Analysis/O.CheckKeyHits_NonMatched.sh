@@ -40,17 +40,22 @@ minus_genphenmatch_pcs_merged = merge(full_minus_genphenmatch,minus_genphenmatch
 nrow(minus_genmatch_pcs_merged)
 nrow(minus_genphenmatch_pcs_merged
 
+vroom_write(minus_genmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_gensim.txt")
+vroom_write(minus_genphenmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_genphensim.txt")
 
 ############
 # THEN RUN REGENIE STEP 1
-./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+comp=(gensim genphensim)
+for c in "${comp[@]}"; do \
+  ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 1 \
-    --pgen array_data/aou_nia_matchit_${comp[0]}_maf_geno_pruned \
+    --pgen array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc \
     --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/aou_nia_matchit_gensim.txt \
+    --covarFile regenie_input/aou_removed_nia_matchit_${c}.txt \
     --bt \
-    --out rg_step1_aou_nia_matchit_gensim/rg_step1_aou_nia_matchit_gensim \
+    --out minus_aou_niahisp_matched/rg_step1_minus_aou_nia_matchit_${c} \
     --bsize 1000 \
     --lowmem \
     --lowmem-prefix tmp_rg_20_matchit \
     --phenoCol AD_any 
+done
