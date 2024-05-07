@@ -40,18 +40,21 @@ minus_genphenmatch_pcs_merged = merge(full_minus_genphenmatch,minus_genphenmatch
 nrow(minus_genmatch_pcs_merged)
 nrow(minus_genphenmatch_pcs_merged
 
-vroom_write(minus_genmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_gensim.txt")
-vroom_write(minus_genphenmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_genphensim.txt")
+vroom_write(minus_genmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_gensim_goodpcs.txt")
+vroom_write(minus_genphenmatch_pcs_merged,"regenie_input/aou_removed_nia_matchit_genphensim_goodpcs.txt")
 
 ############
 # THEN RUN REGENIE STEP 1
 comp=(gensim genphensim)
+
 for c in "${comp[@]}"; do \
+  awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc.psam > tmp ;\
+  mv tmp array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc.psam ;\
   ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
     --step 1 \
     --pgen array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc \
     --phenoFile regenie_input/regenie_pheno.txt \
-    --covarFile regenie_input/aou_removed_nia_matchit_${c}.txt \
+    --covarFile regenie_input/aou_removed_nia_matchit_${c}_goodpcs.txt \
     --bt \
     --out minus_aou_niahisp_matched/rg_step1_minus_aou_nia_matchit_${c} \
     --bsize 1000 \
@@ -59,3 +62,45 @@ for c in "${comp[@]}"; do \
     --lowmem-prefix tmp_rg_20_matchit \
     --phenoCol AD_any 
 done
+
+# FOR REGENIE STEP 2, JUST FOCUS ON THE LEAD VARIANTS NOMINAL IN AOU AND NIA SUBCOHORTS
+# Var: rs192423465 (17-81989936-C-T), rs935208076 (1-117813650-T-C)
+
+awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' pgen_qc/chr17_geno_mac_rs192423465.psam > tmp ;\
+mv tmp pgen_qc/chr17_geno_mac_rs192423465.psam ;\
+
+awk 'NR==1 {print "#FID\tIID\tSEX"} NR>1 {print "0\t" $1 "\t" "NA"}' pgen_qc/chr1_geno_mac_rs935208076.psam > tmp ;\
+mv tmp pgen_qc/chr1_geno_mac_rs935208076.psam
+
+for c in "${comp[@]}"; do \
+  ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+                    --step 2 \
+                    --pgen pgen_qc/chr17_geno_mac_rs192423465 \
+                    --phenoFile regenie_input/regenie_pheno.txt \
+                    --covarFile regenie_input/aou_removed_nia_matchit_${c}_goodpcs.txt \
+                    --bt --firth-se \
+                    --firth --approx --pThresh 0.01 \
+                    --pred minus_aou_niahisp_matched/rg_step1_minus_aou_nia_matchit_${c}_pred.list \
+                    --bsize 400 \
+                    --out minus_aou_niahisp_matched/chr17_rs192423465_${c} \
+                    --minMAC 20 \
+                    --phenoCol AD_any ;\
+done
+for c in "${comp[@]}"; do \
+  ./regenie_v3.4.1.gz_x86_64_Centos7_mkl \
+                    --step 2 \
+                    --pgen pgen_qc/chr1_geno_mac_rs935208076 \
+                    --phenoFile regenie_input/regenie_pheno.txt \
+                    --covarFile regenie_input/aou_removed_nia_matchit_${c}_goodpcs.txt \
+                    --bt --firth-se \
+                    --firth --approx --pThresh 0.01 \
+                    --pred minus_aou_niahisp_matched/rg_step1_minus_aou_nia_matchit_${c}_pred.list \
+                    --bsize 400 \
+                    --out minus_aou_niahisp_matched/chr1_rs935208076_remove_${c} \
+                    --minMAC 20 \
+                    --phenoCol AD_any ;\
+done
+
+# BACK UP EVERYTHING
+gsutil -m cp -rn regenie_input/aou_removed_nia_matchit_gensim_goodpcs.txt
+regenie_input/aou_removed_nia_matchit_genphensim_goodpcs.txt
