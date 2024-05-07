@@ -19,7 +19,7 @@ for c in "${comp[@]}"; do \
   ./plink2 --pfile array_data/arrays_allchr --chr 1-22 --maf 0.01 --geno 0.1 \
     --keep regenie_input/aou_removed_nia_matchit_${c}_justiid.txt --out \
     array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned \
-    --indep-pairwise 100kb 1 0.1 --memory 100000 --make-pgen --out ;\
+    --indep-pairwise 100kb 1 0.1 --memory 100000 --make-pgen ;\
   ./plink2 --pfile array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned \
     --exclude array_data/array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned.prune.out \
     --make-pgen --out array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc ;\
