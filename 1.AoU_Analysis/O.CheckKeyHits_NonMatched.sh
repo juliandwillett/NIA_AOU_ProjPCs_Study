@@ -21,7 +21,7 @@ for c in "${comp[@]}"; do \
     array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned \
     --indep-pairwise 100kb 1 0.1 --memory 100000 --make-pgen ;\
   ./plink2 --pfile array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned \
-    --exclude array_data/array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned.prune.out \
+    --exclude array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned.prune.out \
     --make-pgen --out array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc ;\
   ./plink2 --pfile array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc --pca 20 approx \
     --out array_data/aou_removed_nia_matchit_${c}_maf_geno_pruned_qc_pcs ;\
@@ -29,6 +29,17 @@ done
 
 ############
 # THEN EDIT THE COVAR FILES, AND UPDATE ON GOOGLE CLOUD BUCKET
+full_minus_genmatch = vroom("regenie_input/aou_removed_nia_matchit_gensim.txt") %>% select(FID,IID,Age,Sex)
+full_minus_genphenmatch = vroom("regenie_input/aou_removed_nia_matchit_genphensim.txt") %>% select(FID,IID,Age,Sex)
+
+minus_genmatch_pcs = vroom("array_data/aou_removed_nia_matchit_genmatch_maf_geno_pruned_qc_pcs.eigenvec")
+minus_genphenmatch_pcs = vroom("array_data/aou_removed_nia_matchit_genphenmatch_maf_geno_pruned_qc_pcs.eigenvec")
+
+minus_genmatch_pcs_merged = merge(full_minus_genmatch,minus_genmatch_pcs,by="IID")
+minus_genphenmatch_pcs_merged = merge(full_minus_genphenmatch,minus_genphenmatch_pcs,by="IID")
+nrow(minus_genmatch_pcs_merged)
+nrow(minus_genphenmatch_pcs_merged
+
 
 ############
 # THEN RUN REGENIE STEP 1
