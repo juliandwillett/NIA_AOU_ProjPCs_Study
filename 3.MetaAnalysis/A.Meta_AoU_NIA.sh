@@ -28,21 +28,27 @@ FREQ     A1FREQ
 EFFECT   BETA
 STDERR   SE
 PVAL     Pval
-PROCESS /n/home09/jwillett/true_lab_storage/Data_Links/AoU_GWAS/AoU_NIA_HISP_MatchIt_No_Anc_Covar/aou_MatchIt_summ_stats_AD_any_pval.txt
+PROCESS /n/home09/jwillett/true_lab_storage/Data_Links/AoU_GWAS/AoU_NIA_HISP_MatchIt_PCs_AgeSex_No_Anc_Covar/aou_MatchIt_summ_stats_AD_any_pval.txt
 PROCESS /n/home09/jwillett/true_lab_storage/Data_Links/NIAGADS_Personal/selfHISP8467_a_pc_5JPCs_ss.Affection.Status.glm.logistic.full_for_metal.txt
 
 ANALYZE HETEROGENEITY
 
 # For running that file:
-salloc -p test --mem 80000 -t 0-02:00 -n 4
-/n/home13/dprokopenko/bin/metal METAL_script_AOU_NIAGADS.txt
+/n/home13/dprokopenko/bin/metal METAL_script_AOU_NIAGADS_genonly.txt
+mv METAANALYSIS1.TBL meta/aou_nia_hisp_genmatch_metaanalysis.TBL
+awk 'BEGIN{FS=" "; OFS="\t"} NR==1 {print $0 "\tCHR\tPOS\tIDrev"} NR>1 {split($1, values, "-"); $16 = values[1]; \
+  $17 = values[2]; $18 = $16 "-" $17 "-" toupper($3) "-" toupper($2); $20 = $16 "-" $17; print $0}' \
+  meta/aou_nia_hisp_genmatch_metaanalysis.TBL > meta/aou_nia_hisp_genmatch_metaanalysis_chrposrefalt.TBL
+awk 'BEGIN{FS=" "; OFS="\t"} NR==1 {print $0} NR>1 && $10 <= 5e-8 && $16 != 23 {print $0}' \
+  meta/aou_nia_hisp_genmatch_metaanalysis_chrposrefalt.TBL > \
+  meta/aou_nia_hisp_genmatch_metaanalysis_chrposrefalt_gwsig.TBL
 
-### Then rename output for downstream work.
-mv METAANALYSIS1.TBL aou_genphensim_niahisp_niahisp_meta_analysis.TBL
-awk 'BEGIN{FS=" "; OFS="\t"} NR==1 {print $0 "\tCHR\tPOS\tID\tIDrev"} NR>1 {split($1, values, "-"); \
-  $16 = values[1]; $17 = values[2]; $18 = $16 "-" $17 "-" toupper($2) "-" toupper($3); \
-  $19 = $16 "-" $17 "-" toupper($3) "-" toupper($2); $20 = $16 "-" $17; print $0}' \
-  aou_genphensim_niahisp_niahisp_meta_analysis.TBL > aou_genphensim_niahisp_niahisp_meta_analysis_chrposrefalt_cols.TBL
-awk 'NR==1 || $10 <= 0.05 {print}' aou_genphensim_niahisp_niahisp_meta_analysis_chrposrefalt_cols.TBL > \
-  aou_genphensim_niahisp_niahisp_meta_analysis_p_5e-2.TBL
-
+# FOR GEN PCs AND AGE AND SEX ANALYSIS
+/n/home13/dprokopenko/bin/metal METAL_script_AOU_NIAGADS_genphen.txt
+mv METAANALYSIS1.TBL meta/aou_nia_hisp_genphenmatch_metaanalysis.TBL
+awk 'BEGIN{FS=" "; OFS="\t"} NR==1 {print $0 "\tCHR\tPOS\tIDrev"} NR>1 {split($1, values, "-"); $16 = values[1]; \
+  $17 = values[2]; $18 = $16 "-" $17 "-" toupper($3) "-" toupper($2); $20 = $16 "-" $17; print $0}' \
+  meta/aou_nia_hisp_genphenmatch_metaanalysis.TBL > meta/aou_nia_hisp_genphenmatch_metaanalysis_chrposrefalt.TBL
+awk 'BEGIN{FS=" "; OFS="\t"} NR==1 {print $0} NR>1 && $10 <= 5e-8 && $16 != 23 {print $0}' \
+  meta/aou_nia_hisp_genphenmatch_metaanalysis_chrposrefalt.TBL > \
+  meta/aou_nia_hisp_genphenmatch_metaanalysis_chrposrefalt_gwsig.TBL
