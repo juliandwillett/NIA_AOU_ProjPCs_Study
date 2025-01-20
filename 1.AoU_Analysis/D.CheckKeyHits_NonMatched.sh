@@ -1,3 +1,5 @@
+# This code was to investigate variants that did not occur in both datasets re checking for mutual hits.
+
 # First, make covar files, removing participants from each AoU subcohort (to check for reproducibility)
 # Take regenie_covar.txt and remove participants from: covar_aou_nia_matchit_genphensim.txt or covar_aou_nia_matchit_gensim.txt
 
