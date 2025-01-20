@@ -2,6 +2,8 @@
 
 This is the workspace for our manuscript, "Matching Heterogeneous Cohorts by Projected Principal Components Reveals Two Novel Alzheimer's Disease-Associated Genes in the Hispanic Population."
 
+The key part of our analysis (the projection) is in NIA_AOU_ProjPCs_Study/1.AoU_Analysis/B.MatchAoU_NIAGADS_MatchIt.sh.
+
 To replicate our analyses, follow the flow as documented in the paper. So:
 1. Organize data for first cohort (make bed files), running GWAS. 
 2. Run the AoU_Analysis folder code to produce projected PCs onto the second cohort.
