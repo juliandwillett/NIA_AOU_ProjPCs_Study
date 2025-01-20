@@ -659,43 +659,6 @@ make_path_specific_expr_table = function(df,sc_data) {
   
   return(out_df %>% drop_na(ID) %>% arrange(CHR) %>% select(-CHR,-ID))
 }
-do_fine_mapping = function() {
-  # fm_df = vroom("/n/home09/jwillett/true_lab_storage/Data_Links/NIAGADS_Personal/selfHISP8467_a_pc_5JPCs_ss.Affection.Status.glm.logistic.full.piezo2.txt")
-  # r_matrix = as.matrix(vroom("/n/home09/jwillett/true_lab_storage/02_PIEZO2_HISP/piezo2_finemap_data.phased.vcor1",col_names = F))
-  # r_matrix[is.na(r_matrix)] = 0
-  # fitted_rss2 = susie_rss(bhat = fm_df$beta, shat = fm_df$se, R = r_matrix, n = max(fm_df$n), L = 10)
-  # out_df = data.frame(ID=fm_df$rsid,PIP=fitted_rss2$pip)
-  # vroom_write(out_df,"piezo2_susieR_finemap_allvar_pip.txt")
-  
-  return(vroom("piezo2_susieR_finemap_allvar_pip.txt"))
-}
-doLDLink = function() {
-  # tmp = vroom("/n/home09/jwillett/true_lab_storage/Data_Links/AoU_GWAS/HISP_GWAS_Hisp_PCs/aou_hisp_hisp_pcs_geno_1e-1_mac_20_p_1e-1.txt") %>%
-  #   filter(CHR == 18,POS >= 11144647-5e5,POS <= 11144647+5e5,10^(-LOG10P) <= 0.05,
-  #          A1FREQ >= 0.01,(1-A1FREQ) >= 0.01)
-  # token = "24967d5537f4"
-  # variants = glue("chr{tmp_piezo2_common$CHROM}:{tmp_piezo2_common$GENPOS}") %>% append("chr18:11144647")
-  # dprime_piezo2_matrix = LDmatrix(variants,pop="AMR",r2d="d",token=token,genome_build="grch38_high_coverage")
-  # r2_piezo2_matrix = LDmatrix(variants,pop="AMR",r2d="r2",token=token,genome_build="grch38_high_coverage")
-  # vroom_write(dprime_piezo2_matrix,'dprime_piezo2_matrix.txt')
-  dprime_piezo2_matrix = vroom("dprime_piezo2_matrix.txt")
-  rs4573993_ld_d = dprime_piezo2_matrix %>% select(RS_number,rs4573993) %>% rename(Dprime=rs4573993)
-  rs4573993_ld_r2 = r2_piezo2_matrix %>% select(RS_number,rs4573993) %>% rename(R2=rs4573993)
-  merged = merge(rs4573993_ld_d,rs4573993_ld_r2,by="RS_number")
-  likely_linked = merged %>% filter(Dprime >= 0.9,R2 >= 0.1)
-  
-  ukb_nominal = vroom("/n/home09/jwillett/true_lab_storage/Data_Links/UKB_GWAS_Data/all_variants_200k_complete_p_id_chrpos_piezo2_p_1e-1.regenie") %>% 
-    filter(Pval <= 0.05,A1FREQ >= 0.01,(1-A1FREQ) >= 0.01)
-  variants_ukb = glue("chr{ukb_nominal$`#CHROM`}:{ukb_nominal$GENPOS}") %>% append("chr18:11144647")
-  dprime_piezo2_matrix_ukb = LDmatrix(variants_ukb,pop="AMR",r2d="d",token=token,genome_build="grch38_high_coverage")
-  r2_piezo2_matrix_ukb = LDmatrix(variants_ukb,pop="AMR",r2d="r2",token=token,genome_build="grch38_high_coverage")
-  vroom_write(dprime_piezo2_matrix_ukb,'dprime_piezo2_matrix_ukb.txt')
-  vroom_write(r2_piezo2_matrix_ukb,'r2_piezo2_matrix_ukb.txt')
-  rs4573993_ld_d_ukb = dprime_piezo2_matrix_ukb %>% select(RS_number,rs4573993) %>% rename(Dprime=rs4573993)
-  rs4573993_ld_r2_ukb = r2_piezo2_matrix_ukb %>% select(RS_number,rs4573993) %>% rename(R2=rs4573993)
-  merged = merge(rs4573993_ld_d_ukb,rs4573993_ld_r2_ukb,by="RS_number")
-  likely_linked_ukb = merged %>% filter(Dprime >= 0.9)#,R2 >= 0.1)
-}
 get_variants_in_ld = function(dataset,r2_cutoff = 0.1) {
   # first get all the IDs
   put_causal_variants_nia = c("18:11144178:C:T","18:11144561:A:T",
@@ -785,44 +748,6 @@ check_hits_ld_hits_all_datasets = function() {
   return_df = out_df %>% filter(AoU_HISP_P <= 0.05 & (AoU_AMR_P <= 0.05 | 
                                 AoU_NIA_PROJ_P <= 0.05 | AoU_All_P <= 0.05 | UKB_P <= 0.05))
   return(return_df)
-}
-get_p_put_causal_variants_across_studies = function() {
-  put_causal_variants_nia = c("18:11144178:C:T","18:11144561:A:T",
-                              "18:11144647:G:A","18:11145132:A:T")
-  put_causal_variants_aou = str_replace_all(put_causal_variants_nia,":","-")
-  
-  # get data
-  summstats_nia_hisp = vroom("../Data_Links/NIAGADS_Personal/selfHISP8467_a_pc_5JPCs_ss.Affection.Status.glm.logistic.full.piezo2.txt",show_col_types = F) %>%
-    mutate(ID = str_replace_all(marker,":","-"))
-  summstats_aou_hisp = vroom("../Data_Links/AoU_GWAS/HISP_GWAS_Hisp_PCs/aou_hisp_hisp_pcs_geno_1e-1_mac_20_piezo2.txt",show_col_types = F)
-  summstats_aou_amr = vroom("/n/home09/jwillett/true_lab_storage/Data_Links/AoU_GWAS/AncStrat_BT_SingleAnc_PCs/aou_amr_summ_stats_AD_any_piezo2.txt",show_col_types = F)
-  summstats_aou_nia_proj_1sd = vroom("../Data_Links/AoU_GWAS/AoU_NIAGADS_Proj_XSD_Chr18/chr18_proj_1sd_geno_1e-1_pcs_AD_any_A.regenie",show_col_types = F)
-  summstats_aou_nia_proj_3sd = vroom("../Data_Links/AoU_GWAS/AoU_NIAGADS_Proj_3SD/aou_Proj_3SD_summ_stats_AD_any_piezo2.txt",show_col_types = F)
-  summstats_aou_all = vroom("../Data_Links/AoU_GWAS/CommonPCs_NonMCC_Geno1e-1_MAC20/aou_ad_any_anc_all_gwas_geno_1e-1_mac20_common_pcs_pvals_piezo2locus.txt",show_col_types = F)
-  summstats_ukb = vroom("/n/home09/jwillett/true_lab_storage/Data_Links/UKB_GWAS_Data/all_variants_200k_complete_p_id_piezo2.regenie",show_col_types = F) 
-  
-  # get variants in LD with the putatively causal variants
-  ld_hits = check_hits_ld_hits_all_datasets()
-  
-  # make df
-  out_df = data.frame(ID=put_causal_variants_aou %>% append("") %>% append(ld_hits$ID),
-                      Rsid=NA,NIA_HISP_P=NA,
-                      AoU_HISP_P=NA,AoU_AMR_P=NA,AoU_NIA_PROJ_1SD_P=NA,
-                      AoU_NIA_PROJ_3SD_P=NA,AoU_All_P=NA,UKB_P=NA)
-  for (row in 1:nrow(out_df)) {
-    curr_id = out_df$ID[[row]] ; split_id = str_split(curr_id,"-")[[1]]
-    if (curr_id == "") next
-    curr_id_rev = glue("{split_id[[1]]}-{split_id[[2]]}-{split_id[[4]]}-{split_id[[3]]}")
-    out_df$Rsid[[row]] = (summstats_nia_hisp %>% filter(ID == curr_id | ID == curr_id_rev))$rsid
-    out_df$NIA_HISP_P[[row]] = (summstats_nia_hisp %>% filter(ID == curr_id))$p
-    out_df$AoU_HISP_P[[row]] = 10^(-1*(summstats_aou_hisp %>% filter(ID == curr_id))$LOG10P)
-    out_df$AoU_AMR_P[[row]] = 10^(-1*(summstats_aou_amr %>% filter(ID == curr_id))$LOG10P)
-    out_df$AoU_NIA_PROJ_1SD_P[[row]] = 10^(-1*(summstats_aou_nia_proj_1sd %>% filter(ID == curr_id))$LOG10P)
-    out_df$AoU_NIA_PROJ_3SD_P[[row]] = 10^(-1*(summstats_aou_nia_proj_3sd %>% filter(ID == curr_id))$LOG10P)
-    out_df$AoU_All_P[[row]] = 10^(-1*(summstats_aou_all %>% filter(ID == curr_id))$LOG10P)
-    out_df$UKB_P[[row]] = 10^(-1*(summstats_ukb %>% filter(ID == curr_id))$LOG10P)
-  }
-  return(out_df)
 }
 get_nia_nominal_hits = function(df) {
   print('Reading in NIAGADS summary stats')
