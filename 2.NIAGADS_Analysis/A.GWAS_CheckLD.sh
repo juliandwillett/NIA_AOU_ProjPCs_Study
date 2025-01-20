@@ -1,3 +1,7 @@
+# GWAS
+# We used plink2 to run GWAS on NIAGADS, using five Jaccard principal components.
+
+# To ensure hits were independent, we ran LD analyses after other LD analyses.
 # key variants: rs5018879, rs3925017, rs4573993, rs4413029
 salloc -p test --mem 160000 -t 0-01:00 -c 6
 ./plink2 --pfile /n/home09/jwillett/true_lab_storage/Data_Links/NIAGADS_Personal/NIAGADS_PIEZO2_PLINK \
