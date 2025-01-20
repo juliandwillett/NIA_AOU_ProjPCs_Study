@@ -1,3 +1,67 @@
+###################
+#GET PROJECTED PCs - adapts this guide: https://privefl.github.io/bigsnpr/articles/bedpca.html
+library(bigutilsr)
+library(bigsnpr)
+library(vroom)
+library(tidyverse)
+library(glue)
+library(data.table)
+library(RSpectra)
+library(magrittr)
+
+### First, extract intersecting variants by chrpos
+aou_var_all = vroom("array_data/aou_all_array_maf_hwe_geno.pvar",delim="\t",show_col_types = F) %>% 
+    mutate(CHRPOS = glue("{`#CHROM`}-{POS}")) 
+nia_var = vroom("piezo2_projection/NIAGADS_hisp_maf_1e-2_variants.pvar",delim="\t",skip = 68,show_col_types = F) %>% 
+    mutate(CHRPOS = glue("{`#CHROM`}-{POS}")) 
+c(nrow(aou_var_all),nrow(nia_var))
+
+shared_ids_aou = aou_var_all %>% filter(CHRPOS %in% nia_var$CHRPOS) %>% mutate(ID = str_replace(ID,"chr","")) %>%
+    mutate(ID = str_replace_all(ID,"-",":"))
+shared_ids_nia = nia_var %>% filter(CHRPOS %in% aou_var_all$CHRPOS) 
+c(nrow(shared_ids_aou),nrow(shared_ids_nia))
+vroom_write(shared_ids_aou %>% select(ID),"piezo2_projection/shared_IDs_aou_all.txt",col_names = F)
+vroom_write(shared_ids_nia %>% select(ID),"piezo2_projection/shared_IDs_nia.txt",col_names = F)
+
+### Run QC to produce requisite datasets. Done on array data/data with MAF 0.01 or more. QC done beforehand using geno/mind.
+# Reference (NIAGADS)
+ref_bed_qc <- snp_plinkQC(plink.path = "plink2",
+                    prefix.in = "piezo2_projection/nia_aou_intersect",
+                    prefix.out = tempfile(),
+                    file.type = "--bfile",  # the default (for ".bed")
+                    autosome.only = TRUE)
+(ref_bed <- bed(ref_bed_qc))
+
+# Our data (AoU). 
+aou_bed_qc <- snp_plinkQC(plink.path = "plink2",
+                    prefix.in = "piezo2_projection/aou_array_nia_intersect",
+                    prefix.out = tempfile(),
+                    file.type = "--bfile",  # the default (for ".bed")
+                    autosome.only = TRUE)
+(aou_bed <- bed(aou_bed_qc))
+
+# Projection
+options(bigstatsr.check.parallel.blas = FALSE)
+project2<-bed_projectPCA(ref_bed,aou_bed,ncores=7,build.new="hg38",build.ref="hg38",k=20)
+
+saveRDS(project2,"piezo2_projection/aou_nia_projection_list.rds")
+project2 = readRDS("piezo2_projection/aou_nia_projection_list.rds")
+
+PCs.ref<-cbind(data.frame(IID=ref_bed$fam$sample.ID),predict(project2$obj.svd.ref),Cohort='NIAGADS HISP')
+PCs.proj<-cbind(data.frame(IID=aou_bed$fam$sample.ID),project2$OADP_proj,Cohort="AoU All")
+PCs.final<-rbind(PCs.proj,PCs.ref)
+head(PCs.final)
+nrow(PCs.final)
+
+tmp = vroom("NIAGADS_demographic_data_all.txt",show_col_types = F) %>% 
+    mutate(AD = as.factor(Affection.Status)) %>%
+    mutate(AD = ifelse(Affection.Status == 1,"Case","Control"))
+plt = ggplot(tmp,aes(x=PC1,y=PC2,color=AD)) + geom_point() + theme_bw() +
+    theme(text = element_text(size=16)) + xlab("PC1") + ylab("PC2") 
+print(plt)
+ggsave("proj_pcs_niahisp_plt.png",width=7,height=5,dpi=300,plot = plt)
+
+#################################
 # Match using projected PCs, then use MatchIt to identify AoU participants most similar to NIAGADS cohort using either
 #     solely PCs or PCs + Age + Sex
 {R}
